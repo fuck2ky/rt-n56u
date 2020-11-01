@@ -41,6 +41,9 @@ romfs:
 	for i in $(ROMFS_DIRS); do \
 		[ -d $(ROMFSDIR)/$$i ] || mkdir -p $(ROMFSDIR)/$$i; \
 	done
+	if [ -f $(BOARD_DIR)/l1profile.dat ]; then \
+		cp -f $(BOARD_DIR)/l1profile.dat $(ROMFSDIR)/etc_ro/Wireless; \
+	fi
 	for i in `ls $(BOARD_DIR)/SingleSKU*.dat` ; do \
 		[ -f $$i ] && cp -f $$i $(ROMFSDIR)/etc_ro/Wireless; \
 	done
@@ -75,7 +78,7 @@ endif
 endif
 romfs.post::
 	[ -d $(IMAGEDIR) ] || mkdir -p $(IMAGEDIR)
-	sudo /sbin/ldconfig -r $(ROMFSDIR) -C /etc_ro/ld.so.cache
+	#/sbin/ldconfig -r $(ROMFSDIR) -C /etc_ro/ld.so.cache
 	rm -f $(RAMDISK)
 	rm -f $(KERNELZ).lzma
 ifeq ($(CONFIG_RT2880_ROOTFS_IN_FLASH),y)

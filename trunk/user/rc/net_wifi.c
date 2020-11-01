@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <net/if.h>
+#include <time.h>
 
 #include "rc.h"
 #include "switch.h"
@@ -680,7 +681,7 @@ restart_wifi_wl(int radio_on, int need_reload_conf)
 	stop_8021x_wl();
 
 	stop_wifi_all_wl();
-#if defined (BOARD_K2P)
+#if defined (BOARD_MT7615_DBDC)
 	if (need_reload_conf) {
 		stop_8021x_rt();
 		stop_wifi_all_rt();
@@ -696,7 +697,7 @@ restart_wifi_wl(int radio_on, int need_reload_conf)
 	start_wifi_apcli_wl(radio_on);
 
 	start_8021x_wl();
-#if defined (BOARD_K2P)
+#if defined (BOARD_MT7615_DBDC)
 	if (need_reload_conf) {
 		int rt_radio_on = get_enabled_radio_rt();
 		if (rt_radio_on)
@@ -728,7 +729,7 @@ restart_wifi_rt(int radio_on, int need_reload_conf)
 	stop_8021x_rt();
 
 	stop_wifi_all_rt();
-#if defined (BOARD_K2P)
+#if defined (BOARD_MT7615_DBDC)
 	if (need_reload_conf) {
 		stop_8021x_wl();
 		stop_wifi_all_wl();
@@ -744,7 +745,7 @@ restart_wifi_rt(int radio_on, int need_reload_conf)
 	start_wifi_apcli_rt(radio_on);
 
 	start_8021x_rt();
-#if defined (BOARD_K2P)
+#if defined (BOARD_MT7615_DBDC)
 	if (need_reload_conf) {
 		int wl_radio_on = get_enabled_radio_wl();
 		if (wl_radio_on)
@@ -789,6 +790,16 @@ start_8021x_wl(void)
 	if (is_need_8021x(nvram_wlan_get(1, "auth_mode")))
 		eval("rt2860apd", "-i", IFNAME_5G_MAIN);
 #endif
+
+	const char *wifname = find_wlan_if_up(1);
+
+	if (!wifname)
+		return;
+
+	int wl_KickStaRssiLow = nvram_get_int("wl_KickStaRssiLow");
+	int wl_AssocReqRssiThres = nvram_get_int("wl_AssocReqRssiThres");
+	doSystem("iwpriv %s set %s=%d", wifname, "KickStaRssiLow", wl_KickStaRssiLow);
+	doSystem("iwpriv %s set %s=%d", wifname, "AssocReqRssiThres", wl_AssocReqRssiThres);
 }
 
 void
@@ -800,6 +811,16 @@ start_8021x_rt(void)
 #endif
 	if (is_need_8021x(nvram_wlan_get(0, "auth_mode")))
 		eval("rtinicapd", "-i", IFNAME_2G_MAIN);
+
+	const char *wifname = find_wlan_if_up(0);
+
+	if (!wifname)
+		return;
+
+	int rt_KickStaRssiLow = nvram_get_int("rt_KickStaRssiLow");
+	int rt_AssocReqRssiThres = nvram_get_int("rt_AssocReqRssiThres");
+	doSystem("iwpriv %s set %s=%d", wifname, "KickStaRssiLow", rt_KickStaRssiLow);
+	doSystem("iwpriv %s set %s=%d", wifname, "AssocReqRssiThres", rt_AssocReqRssiThres);
 }
 
 void

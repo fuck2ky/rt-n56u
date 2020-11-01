@@ -260,6 +260,35 @@ void restart_scutclient(void)
 
 #endif
 
+
+#if defined(APP_MENTOHUST)
+
+int is_mentohust_run(void)
+{
+	if(pids("bin_mentohust"))
+		return 1;
+	return 0;
+}
+void stop_mentohust(void)
+{
+	eval("/usr/bin/mentohust.sh","stop");
+}
+
+void start_mentohust(void)
+{
+	int mode = nvram_get_int("mentohust_enable");
+	if (mode == 1)
+		eval("/usr/bin/mentohust.sh","start");
+}
+
+void restart_mentohust(void)
+{
+	stop_mentohust();
+	start_mentohust();
+}
+
+#endif
+
 #if defined(APP_TTYD)
 void stop_ttyd(void){
 	eval("/usr/bin/ttyd.sh","stop");
@@ -355,16 +384,16 @@ void restart_dnsforwarder(void){
 #if defined(APP_NAPT66)
 void start_napt66(void){
 	int napt66_mode = nvram_get_int("napt66_enable");
-	char *wan6_ifname = nvram_get("wan0_ifname6");
+	char *wan6_ifname = nvram_get("wan0_ifname_t");
 	if (napt66_mode == 1) {
 		if (wan6_ifname) {
 			char napt66_para[32];
 			logmessage("napt66","wan6 ifname: %s",wan6_ifname);
 			snprintf(napt66_para,sizeof(napt66_para),"wan_if=%s",wan6_ifname);
 			module_smart_load("napt66", napt66_para);
-		}
-		else
+		} else {
 			logmessage("napt66","Invalid wan6 ifname!");
+		}
 	}
 }
 #endif
@@ -588,7 +617,9 @@ start_services_once(int is_ap_mode)
 	start_crond();
 	start_networkmap(1);
 	start_rstats();
-
+#if defined(APP_MENTOHUST)
+	start_mentohust();
+#endif
 	return 0;
 }
 
@@ -614,6 +645,9 @@ stop_services(int stopall)
 #endif
 #if defined(APP_SCUT)
 	stop_scutclient();
+#endif
+#if defined(APP_MENTOHUST)
+	stop_mentohust();
 #endif
 #if defined(APP_TTYD)
 	stop_ttyd();

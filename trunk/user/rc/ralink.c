@@ -72,7 +72,7 @@ static const struct cc_t {
 	{ "CA",  0,  0,  5 }, // FCC
 	{ "CH",  1,  1,  0 },
 	{ "CL",  1,  0,  0 },
-	{ "CN",  1,  4,  3 }, // CN
+	{ "CN",  1,  0,  3 }, // CN
 	{ "CO",  0,  0,  0 },
 	{ "CR",  1,  0,  0 },
 	{ "CY",  1,  1,  0 },
@@ -713,7 +713,7 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 #if defined (USE_WID_5G) && USE_WID_5G==7615
 	if (is_aband) {
 		if (nvram_wlan_get_int(1, "mumimo"))
-			fprintf(fp, "MUTxRxEnable=%d\n", 3);
+			fprintf(fp, "MUTxRxEnable=%d\n", 1);
 		else
 			fprintf(fp, "MUTxRxEnable=%d\n", 0);
 
@@ -722,29 +722,12 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 		fprintf(fp, "ETxBfNoncompress=%d\n", 0);
 		fprintf(fp, "ETxBfIncapable=%d\n", 0);
 
-		if (nvram_wlan_get_int(1, "band_steering"))
-			fprintf(fp, "BandSteering=%d\n", 1);
-		else 
-			fprintf(fp, "BandSteering=%d\n", 0);
+		fprintf(fp, "BandSteering=%d\n", 0);
 
-/* if Rssi2.4G > Rssi5G by RssiDiff, then allow client to connect 2.4G */
-		fprintf(fp, "BndStrgRssiDiff=%d\n", 30);
-
-/* if Rssi5G < RssiLow, then this client cannot connect to 5G */
-		fprintf(fp, "BndStrgRssiLow=%d\n", -90);
-
-/* Entry Age Time (ms) */
-		fprintf(fp, "BndStrgAge=%d\n", 600000);
-
-/* Time for holding 2.4G connection rsp (ms) */
-		fprintf(fp, "BndStrgHoldTime=%d\n", 5000);
-
-/* Time for deciding if a client is 2.4G only (ms) */
-		fprintf(fp, "BndStrgCheckTime=%d\n", 7000);
 
 	}
 #endif
-#if defined (BOARD_K2P)
+#if defined (BOARD_MT7615_DBDC)
 	fprintf(fp, "DBDC_MODE=%d\n", 1);
 #endif
 
@@ -760,9 +743,9 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 
 	//AutoChannelSkipList
 	if (!is_aband)
-		sprintf(list, "%d;%d", 12, 13);
+		sprintf(list, "%d", 14);
 	else
-		sprintf(list, "%d", 165);
+		sprintf(list, "%d;%d;%d;%d", 52, 56, 60, 64);
 	fprintf(fp, "AutoChannelSkipList=%s\n", list);
 
 	//BasicRate
@@ -891,7 +874,7 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 	fprintf(fp, "NoForwardingMBCast=%d;%d\n", i_val_mbss[0], i_val_mbss[1]);
 
 	//NoForwardingBTNBSSID
-#if defined(BOARD_K2P)
+#if defined(BOARD_MT7615_DBDC)
 	fprintf(fp, "NoForwardingBTNBSSID=%d\n", 0);
 #else
 	i_val = nvram_wlan_get_int(is_aband, "guest_lan_isolate");
@@ -909,7 +892,7 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 
 	fprintf(fp, "IEEE80211H=%d\n", 0);
 	fprintf(fp, "CarrierDetect=%d\n", 0);
-	fprintf(fp, "PreAntSwitch=\n");
+	fprintf(fp, "PreAntSwitch=\n"); //set this to 1 for RM2100, only mt7615 4.4.2.1
 	fprintf(fp, "PhyRateLimit=%d\n", 0);
 	fprintf(fp, "DebugFlags=%d\n", 0);
 	fprintf(fp, "FineAGC=%d\n", 0);
@@ -925,6 +908,8 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 	fprintf(fp, "DfsUpperLimit=%d\n", 0);
 	fprintf(fp, "DfsIndoor=%d\n", 0);
 	fprintf(fp, "DFSParamFromConfig=%d\n", 0);
+	fprintf(fp, "DfsOutdoor=%d\n", 0);
+	fprintf(fp, "DfsEnable=%d\n", 0);
 	fprintf(fp, "FCCParamCh0=\n");
 	fprintf(fp, "FCCParamCh1=\n");
 	fprintf(fp, "FCCParamCh2=\n");
@@ -1275,9 +1260,16 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 			i_VHTBW_MAX = 1;
 		//VHT_BW
 		i_val = nvram_wlan_get_int(is_aband, "HT_BW");
-		i_val = (i_val > 1) ? 1 : 0;
-		if (i_HTBW_MAX == 0 || i_VHTBW_MAX == 0) i_val = 0;
-		fprintf(fp, "VHT_BW=%d\n", i_val);
+#if !defined (BOARD_MT7615_DBDC) && USE_WID_5G==7615
+		if (i_val == 3) //160Mhz
+			fprintf(fp, "VHT_BW=%d\n", 2);
+		else
+#endif
+		{
+			i_val = (i_val > 1) ? 1 : 0;
+			if (i_HTBW_MAX == 0 || i_VHTBW_MAX == 0) i_val = 0;
+			fprintf(fp, "VHT_BW=%d\n", i_val);
+		}
 		
 		//VHT_SGI
 		fprintf(fp, "VHT_SGI=%d\n", 1);
@@ -1321,6 +1313,7 @@ gen_ralink_config(int is_soc_ap, int is_aband, int disable_autoscan)
 			i_val = 0;
 		fprintf(fp, "ITxBfEn=%d\n", i_val);
 		fprintf(fp, "ETxBfEnCond=%d\n", i_val);
+		fprintf(fp, "ITxBfEnCond=%d\n", i_val);
 	}
 
 	//AccessPolicy0

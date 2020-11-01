@@ -746,7 +746,7 @@ ifeq ($(CONFIG_BRCM_256QAM_SUPPORT),y)
 EXTRA_CFLAGS += -DBRCM_256QAM 
 endif
 endif
-EXTRA_CFLAGS += -Werror
+#EXTRA_CFLAGS += -Werror
 EXTRA_CFLAGS += -Wframe-larger-than=4096
 ifeq ($(CONFIG_HDR_TRANS_TX_SUPPORT),y)
 	EXTRA_CFLAGS += -DHDR_TRANS_TX_SUPPORT -DCUT_THROUGH_FULL_OFFLOAD
@@ -922,7 +922,7 @@ endif
 #  CFLAGS
 ##################
 EXTRA_CFLAGS += -DAGGREGATION_SUPPORT -DPIGGYBACK_SUPPORT -DWMM_SUPPORT  -DLINUX \
-              -Wstrict-prototypes -Wno-trigraphs -Wall -Wno-unused-but-set-variable
+              -Wstrict-prototypes -Wno-trigraphs -Wall -Wno-unused-variable
 
 EXTRA_CFLAGS += -DOLDSEC
 
