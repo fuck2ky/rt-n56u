@@ -65,6 +65,7 @@ mlme_radio_wl(int is_on)
 #if defined(BOARD_GPIO_LED_SW5G)
 	LED_CONTROL(BOARD_GPIO_LED_SW5G, (is_on) ? LED_ON : LED_OFF);
 #endif
+
 }
 
 void
