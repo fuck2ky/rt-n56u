@@ -34,6 +34,7 @@ build_v2ray:
 	go version ; \
 	go env -w GO111MODULE=on GOPROXY=https://goproxy.cn,https://goproxy.io,direct; \
 	CGO_ENABLED=0 GOOS=linux GOARCH=mipsle go build -trimpath -ldflags "-w -s" -o $(THISDIR)/bin/v2ray; \
+	upx $(THISDIR)/bin/v2ray; \
 	)
 
 clean:
